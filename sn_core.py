@@ -3,24 +3,23 @@ import requests
 import yaml
 import shutil
 import subprocess
-import subprocess
-import requests
 from dataclasses import dataclass
 
 @dataclass
 class NetworkState:
+    """Stores node synchronization status"""
     height: int = 0
     target_height: int = 0
     synced: bool = False
 
 IMAGE = "ghcr.io/equilibriahorizon/equilibria-node:latest"
-DOCKER_DOWNLOAD_URL = "https://www.docker.com/products/docker-desktop/"
 
 def docker_exists():
+    """Checks if docker is installed in the system path"""
     return shutil.which("docker") is not None
 
 def is_container_running(name):
-    """Checks status for a single container (used for registration validation)"""
+    """Checks if a specific container is currently running"""
     try:
         result = subprocess.run(
             f'docker inspect -f "{{{{.State.Running}}}}" {name}',
@@ -29,15 +28,17 @@ def is_container_running(name):
         return result.stdout.strip() == "true"
     except:
         return False
+
 def restart_node(name):
-    """Attempts to restart a specific container by name"""
+    """Restarts a specific container"""
     try:
         subprocess.run(f"docker start {name}", shell=True, check=True, capture_output=True)
         return True
     except Exception:
         return False
+
 def get_all_nodes_status(count):
-    """Optimized: Fetches all running container names in one command to avoid lag"""
+    """Checks status of all possible nodes in a single call"""
     try:
         result = subprocess.run(
             'docker ps --format "{{.Names}}"',
@@ -50,21 +51,23 @@ def get_all_nodes_status(count):
     status_list = []
     for i in range(1, count + 1):
         name = f"sn{i:02d}"
-        # Check against local memory list instead of spawning new processes
         status_list.append("running" if name in running_names else "stopped")
     return status_list
 
 def get_public_ip():
+    """Fetches public IP address"""
     try:
         return requests.get("https://api.ipify.org", timeout=5).text
     except:
         return "127.0.0.1"
 
-def create_compose(base, count, ip):
+def create_compose(base, selected_indices, ip):
+    """Generates docker-compose.yml based only on selected checkboxes"""
     services = {}
-    for i in range(1, count + 1):
-        num = f"{i:02d}"
-        p2p, rpc, quo = 18090+((i-1)*2), 18091+((i-1)*2), 38160+(i-1)
+    for i in selected_indices:
+        idx = i + 1
+        num = f"{idx:02d}"
+        p2p, rpc, quo = 18090+((idx-1)*2), 18091+((idx-1)*2), 38160+(idx-1)
         local_path = os.path.join(base, "data", f"sn{num}").replace("\\", "/")
         os.makedirs(local_path, exist_ok=True)
         
@@ -87,6 +90,7 @@ def create_compose(base, count, ip):
     return True
 
 def get_registration(selected_indices, amount, wallet):
+    """Generates registration commands for selected nodes"""
     try:
         atomic = int(amount) * 1000000000
     except:
@@ -113,11 +117,11 @@ def get_registration(selected_indices, amount, wallet):
                 err = r.get("error", {}).get("message", "Node starting or not synced.")
                 results.append(f"SN{i+1:02d} Error: {err}")
         except Exception:
-            results.append(f"SN{i+1:02d} Error: Unreachable on port {rpc}. Wait 30s.")
+            results.append(f"SN{i+1:02d} Error: Unreachable on port {rpc}.")
     return results
 
 def get_node_network_state(rpc_port):
-    """Fetches blockchain height from the node to check sync status"""
+    """Fetches node sync height via RPC"""
     try:
         payload = {"jsonrpc": "2.0", "id": "0", "method": "get_info"}
         response = requests.post(f"http://127.0.0.1:{rpc_port}/json_rpc", json=payload, timeout=2)
@@ -126,7 +130,6 @@ def get_node_network_state(rpc_port):
             res = data["result"]
             height = res.get("height", 0)
             target = res.get("target_height", 0)
-            # Node is synced if it's within 2 blocks of target
             is_synced = height >= (target - 2) and target > 0
             return NetworkState(height, target, is_synced)
     except:

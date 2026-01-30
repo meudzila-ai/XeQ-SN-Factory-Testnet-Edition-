@@ -1,24 +1,35 @@
-# XeQ SN Factory v1.1 (Updated with Auto-updates and Docker Watchdog)
+# XeQ SN Factory v1.2
+### (Automatic Updates • IP Watchdog • Crash Recovery)
 
-An automated deployment tool for **Equilibria (XEQ)** Service Nodes. This factory simplifies the process of setting up, managing, and registering multiple service nodes on a single Windows machine using Docker.
+A lightweight deployment factory for **Equilibria (XEQ)** Testnet Service Nodes.
 
----
-
-###  IMPORTANT: Safety First
-* **TESTNET ONLY:** This tool is strictly for the Equilibria Testnet. Do not attempt to use it for Mainnet nodes.
-* **DO NOT REUSE KEYS:** Never use the same passwords, seeds, or private keys that you use for your **Mainnet** (real funds) wallet.
-* **STAY SAFE:** Always create a brand new, empty wallet specifically for testing purposes.
+This tool allows you to deploy, monitor, auto-update, and register multiple Service Nodes on a single Windows machine using Docker — with built-in watchdogs for crashes and public IP changes.
 
 ---
 
-### 🛠 Requirements
-* **OS:** Windows 10/11 (64-bit)
-* **Docker Desktop:** (Must be running) - [Download here](https://www.docker.com/products/docker-desktop/)
-* **Python 3.x:** [Download here](https://www.python.org/downloads/) (Make sure to check **"Add Python to PATH"**)
+##  IMPORTANT — Safety First
+
+* **TESTNET ONLY**
+    This factory is strictly for Equilibria Testnet.
+* **DO NOT REUSE MAINNET KEYS**
+    Never use real wallet seeds, passwords, or addresses.
+* **CREATE A FRESH TEST WALLET**
+    Always use a brand-new empty wallet for testing.
 
 ---
 
-###  Getting Started
+## 🛠 Requirements
+
+* **Windows 10 / 11 (64-bit)**
+* **Docker Desktop (must be running)**
+    [Download Docker Desktop](https://www.docker.com/products/docker-desktop/)
+* **Python 3.x** (check *Add Python to PATH*)
+    [Download Python](https://www.python.org/downloads/)
+
+---
+
+##  Getting Started
+
 1.  **Install Dependencies:** Open your terminal (CMD or PowerShell) and run:
     ```bash
     pip install pyyaml requests
@@ -28,16 +39,21 @@ An automated deployment tool for **Equilibria (XEQ)** Service Nodes. This factor
 
 ---
 
-###  Usage Steps
+##  Usage Steps
+
 1.  **Select Folder:** Choose a directory where node data and configurations will be stored.
 2.  **Set Node Count:** Enter how many Service Nodes you want to run.
-3.  **Start Nodes:** Click **START ALL NODES**. This will verify Docker status, check for updates, and pull the latest Equilibria image.
+3.  **Start Nodes:** Click **START ALL NODES**. This will verify Docker status, check for updates (v1.2), and pull the latest Equilibria image.
 4.  **Wallet Setup:** Use the **OPEN WALLET CLI** to create a new wallet or open an existing one inside the container.
-5.  **Register:** Once nodes are synced, enter your wallet address and staking amount, then click **GET REGISTRATION COMMANDS**.
+5.  **Get Commands:** Once nodes are synced (✅ SYNCED), enter your reward wallet address and staking amount, then click **GET REGISTRATION COMMANDS**.
+6.  **Finalize Registration:** * Click on the generated command in the factory window (it will **Auto-Copy** to your clipboard).
+    * Go to the **Wallet CLI terminal** (opened in step 4).
+    * Paste the command and press **Enter** to confirm the staking transaction.
 
 ---
 
-###  Technical Architecture
+##  Technical Architecture
+
 The project consists of three main components:
 * **`main.py`**: The GUI controller and user interface.
 * **`sn_core.py`**: The engine handling Docker logic, IP discovery, and RPC communication.
@@ -51,7 +67,8 @@ To avoid conflicts, the factory uses a dynamic port allocation system:
 
 ---
 
-###  Important Notes
+##  Important Notes
+
 * **Syncing:** Nodes must be 100% synchronized before they can provide a registration command.
 * **Public IP:** The app automatically detects your public IP. Ensure your router/firewall allows the calculated ports.
 * **Security:** Temporary password files used for wallet access are automatically deleted after the wallet terminal is closed.
